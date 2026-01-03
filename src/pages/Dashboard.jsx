@@ -6,7 +6,7 @@ import FilterButton from '../components/DropdownFilter';
 import Datepicker from '../components/Datepicker';
 import Banner from '../partials/Banner';
 import SheetCanvas from '../components/SheetCanvas';
-import Uploadsheet from '../components/sheetcanvas/uploadsheet';
+import Uploadsheet from '../components/sheetcanvas/UploadSheet';
 import { applyLatestChanges, displaySheet as Ds } from '../functions/notes';
 import { createTheme, Grow } from '@mui/material';
 import easinateVPSheet from '../functions/easinateVPSheet';
