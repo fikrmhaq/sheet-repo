@@ -1,8 +1,12 @@
 import React, { useState, useRef, useEffect } from "react";
 import Transition from "../utils/Transition";
+import { darkTheme, useMain } from "../pages/Dashboard";
+import { TextField, ThemeProvider } from "@mui/material";
 
 function DropdownFilter({ align }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [max, setMax] = useState(2)
+  const main = useMain()
 
   const trigger = useRef(null);
   const dropdown = useRef(null);
@@ -75,11 +79,10 @@ function DropdownFilter({ align }) {
       <Transition
         show={dropdownOpen}
         tag="div"
-        className={`origin-top-right z-10 absolute top-full left-0 right-auto min-w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700/60 pt-1.5 rounded-lg shadow-lg overflow-hidden mt-1 ${
-          align === "right"
-            ? "md:left-auto md:right-0"
-            : "md:left-0 md:right-auto"
-        }`}
+        className={`origin-top-right z-10 absolute top-full left-0 right-auto min-w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700/60 pt-1.5 rounded-lg shadow-lg overflow-hidden mt-1 ${align === "right"
+          ? "md:left-auto md:right-0"
+          : "md:left-0 md:right-auto"
+          }`}
         enter="transition ease-out duration-200 transform"
         enterStart="opacity-0 -translate-y-2"
         enterEnd="opacity-100 translate-y-0"
@@ -93,16 +96,20 @@ function DropdownFilter({ align }) {
           </div>
           <ul className="mb-4">
             <li className="py-1 px-3">
-              <label className="flex items-center">
-                <input
-                  ref={Checkrefs.DirectorIndirect}
-                  type="checkbox"
-                  className="form-checkbox"
+              {/* <button onClick={() => main.}>Easinate</button> */}
+              <ThemeProvider theme={darkTheme}>
+                <TextField label="Max Notes"
+                  onChange={ev => setMax(ev.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      const value = e.currentTarget.value; // 👈 directly here
+                      main.onEasinate(parseInt(max))
+                      // submit(value)
+                    }
+                  }}
                 />
-                <span className="text-sm font-medium ml-2">
-                  Direct VS Indirect
-                </span>
-              </label>
+              </ThemeProvider>
             </li>
             <li className="py-1 px-3">
               <label className="flex items-center">
