@@ -8,14 +8,28 @@ export default memo(() => {
     return (
         <ThemeProvider theme={darkTheme}>
             <div className="flex flex-col col-span-full sm:col-span-6 bg-white dark:bg-gray-800 shadow-xs rounded-xl">
-                <TextField label="Easinate"
-                    onChange={ev => setMax(ev.target.value)}
+                <TextField
+                    label="Easinate"
+                    value={max}
+                    inputProps={{
+                        inputMode: "numeric",
+                        pattern: "-?[0-9]*", // allows negative integers
+                    }}
+                    onChange={(e) => {
+                        const value = e.target.value;
+
+                        // allow empty (so user can delete)
+                        if (value === "" || /^-?\d+$/.test(value)) {
+                            setMax(value);
+                        }
+                    }}
                     onKeyDown={(e) => {
                         if (e.key === "Enter" && !e.shiftKey) {
                             e.preventDefault();
-                            const value = e.currentTarget.value; // 👈 directly here
-                            main.onEasinate(parseInt(max))
-                            // submit(value)
+
+                            if (max === "" || max === "-") return;
+
+                            main.onEasinate(parseInt(max, 10));
                         }
                     }}
                 />
