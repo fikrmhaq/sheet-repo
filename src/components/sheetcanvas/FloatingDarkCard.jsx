@@ -3,11 +3,12 @@ import {
     CardContent,
     Stack,
     Typography,
-    Button,
+    // Button,
 } from "@mui/material";
 import { useMain } from "../../pages/Dashboard";
+import Button from "../Button";
 
-export default function FloatingActionCard({onCancel, onSubmit}) {
+export default function FloatingActionCard({ onCancel, onSubmit }) {
     return (
         <Card
             elevation={10}
@@ -26,31 +27,17 @@ export default function FloatingActionCard({onCancel, onSubmit}) {
                 <Stack direction="row" spacing={1.5}>
                     <Button
                         variant="outlined"
-                        sx={{
-                            color: "#bb86fc",
-                            borderColor: "#bb86fc",
-                            "&:hover": {
-                                borderColor: "#d0a9ff",
-                                bgcolor: "rgba(187, 134, 252, 0.08)",
-                            },
-                        }}
-                        onClick={onCancel}
+                 
                     >
                         Cancel
                     </Button>
 
                     <Button
                         variant="contained"
-                        sx={{
-                            bgcolor: "#bb86fc",
-                            color: "#000",
-                            "&:hover": {
-                                bgcolor: "#d0a9ff",
-                            },
-                        }}
+                      
                         onClick={onSubmit}
                     >
-                        Save
+                        Apply
                     </Button>
                 </Stack>
             </CardContent>

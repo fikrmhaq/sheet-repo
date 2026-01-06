@@ -2,12 +2,38 @@ import { memo } from "react";
 import Tooltip from "./Tooltip";
 import { useMain } from "../pages/Dashboard";
 import Notes from "./sheetcanvas/Notes";
-import { getNoteColorAuto } from "../functions";
+import { getNoteColorAuto, getSheet } from "../functions";
+import SheetInfoHeader from "./sheetcanvas/SheetHeader";
+import { calculateVpDifficulty, getDifficultyName } from "../functions/sheetdifficulty";
 
 export default memo(() => {
     const main = useMain()
     return (
         <div className="flex flex-col col-span-full sm:col-span-6 bg-white dark:bg-gray-800 shadow-xs rounded-xl">
+            {
+                main.displaySheet.length !== 0 &&
+                <SheetInfoHeader
+                    {
+                        ...(![null,undefined,{}].includes(main.selected) ? {title:getSheet(main.selected.id).title,
+                            artist:getSheet(main.selected.id).artist,
+                            transpose: getSheet(main.selected.id).transpose
+                        }
+                        :
+                        {})
+                    }
+                    // title={getSheet(main.selected.id).title}
+                    // artist={getSheet(main.selected.id).artist}
+                    // transpose={getSheet(main.selected.id).transpose}
+                    difficulty={calculateVpDifficulty(main.sheet)}
+                    difficultyName={
+                        ![null,undefined,{}].includes(main.selected) &&
+                        ![null,undefined,''].includes(main.selected.i) ? 
+                        getSheet(main.selected.id).sheets.find(el => el.i === main.selected.i).name
+                        :
+                        getDifficultyName(calculateVpDifficulty(main.sheet))
+                    }
+                />
+            }
             <div className="flex max-w-[100%] flex-wrap text-2xl perspective-1000 m-10">
                 {/* {main.sheet} */}
                 {/* {JSON.stringify(main.displaySheet)} */}

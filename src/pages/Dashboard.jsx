@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 
 import Sidebar from '../partials/Sidebar';
 import Header from '../partials/Header';
@@ -7,7 +7,7 @@ import Datepicker from '../components/Datepicker';
 import Banner from '../partials/Banner';
 import SheetCanvas from '../components/SheetCanvas';
 import Uploadsheet from '../components/sheetcanvas/UploadSheet';
-import { applyLatestChanges, displaySheet as Ds } from '../functions/notes';
+import { applyLatestChanges, displaySheet as Ds, stringifyVPSheet } from '../functions/notes';
 import { createTheme, Grow } from '@mui/material';
 import easinateVPSheet from '../functions/easinateVPSheet';
 import EasinateSheet from '../components/sheetcanvas/EasinateSheet';
@@ -15,6 +15,11 @@ import TransposeSheet from '../components/sheetcanvas/TransposeSheet';
 import { transposeVPSheet } from '../functions/transpose';
 import DownloadButton from '../components/sheetcanvas/DownloadButton';
 import FloatingActionCard from '../components/sheetcanvas/FloatingDarkCard';
+import { generateEasinatedDifficultyTiers } from '../functions/sheetdifficulty';
+import { SHEET_EXAMPLE } from '../constants';
+import FloatingSaveButton from '../components/sheetcanvas/FloatingSaveButton';
+import { editVersion } from '../functions';
+import Swal from 'sweetalert2';
 
 const context = createContext({})
 export const useMain = () => useContext(context)
@@ -35,49 +40,42 @@ function Dashboard() {
   const [sheet, setSheet] = useState('')
   const [displaySheet, setDisplaySheet] = useState([])
   const [noteChanges, setNoteChanges] = useState([])
-  // [
-  //   {
-  //     i: 17,
-  //     changes: [
-  //       '[0dz]',
-  //       '[0d]',
-  //       '0'
-  //     ]
-  //   }
-  // ]
+  const [selected, setSelected] = useState(null) // id of selected saved sheet shown
 
-function applyChange(prevState, input) {
-  const inputs = Array.isArray(input) ? input : [input];
 
-  return inputs.reduce((state, { i, change }) => {
-    const historyItem = state.find(item => item.i === i);
 
-    // 🔹 FIRST time this note is touched
-    if (!historyItem) {
-      const original = displaySheet.find(n => n.i === i)?.note;
+  function applyChange(prevState, input) {
+    const inputs = Array.isArray(input) ? input : [input];
 
-      // safety guard
-      if (original === undefined || original === change) {
-        return [...state, { i, changes: [change] }];
+    return inputs.reduce((state, { i, change }) => {
+      const historyItem = state.find(item => item.i === i);
+
+      // 🔹 FIRST time this note is touched
+      if (!historyItem) {
+        const original = displaySheet.find(n => n.i === i)?.note;
+
+        // safety guard
+        if (original === undefined || original === change) {
+          return [...state, { i, changes: [change] }];
+        }
+
+        return [
+          ...state,
+          {
+            i,
+            changes: [original, change],
+          },
+        ];
       }
 
-      return [
-        ...state,
-        {
-          i,
-          changes: [original, change],
-        },
-      ];
-    }
-
-    // 🔹 Subsequent changes
-    return state.map(item =>
-      item.i === i
-        ? { ...item, changes: [...item.changes, change] }
-        : item
-    );
-  }, prevState);
-}
+      // 🔹 Subsequent changes
+      return state.map(item =>
+        item.i === i
+          ? { ...item, changes: [...item.changes, change] }
+          : item
+      );
+    }, prevState);
+  }
   function detectChanges(arr1, arr2) {
     // build lookup for arr1: i -> note
     const baseMap = new Map(
@@ -96,12 +94,36 @@ function applyChange(prevState, input) {
       }));
   }
 
+  const showSheet = (sheet) => {
+    setNoteChanges([])
+    setSheet(sheet)
+    setDisplaySheet(Ds(sheet))
+  }
+
+  const onEditVersion = () => {
+    editVersion(selected.id, selected.i, stringifyVPSheet(displaySheet));
+    Swal.fire({
+      title: 'Success',
+      text: 'Version Edited',
+      icon: 'success',
+      background: '#1F2937', // dark gray, similar to your dark:bg-gray-800
+      color: '#F9FAFB',      // light text color
+      confirmButtonColor: '#7C3AED', // purple button like your theme
+      confirmButtonText: 'OK'
+    });
+  }
+
 
   return (
     <context.Provider value={{
+      selected,
       sheet,
       displaySheet,
       noteChanges,
+      showSheet: (input) => {
+        setSelected({ id: input.id, i: input.i })
+        showSheet(input.sheet)
+      },
       setNoteChanges: ev => {
         setNoteChanges(prev => applyChange(prev, ev))
       },
@@ -116,8 +138,8 @@ function applyChange(prevState, input) {
       }
     }}>
       <div className="flex h-screen overflow-hidden">
-        {/* <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} /> */}
-
+        <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+        {/* {JSON.stringify(selected)} */}
         <div className="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
           <main className="grow">
             <div className="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto">
@@ -149,24 +171,25 @@ function applyChange(prevState, input) {
           <Banner />
 
         </div>
-        <Uploadsheet open={modalOpen} onClose={() => setModalOpen(false)} onSubmit={sheet => {
-          setNoteChanges([])
-          setSheet(sheet)
-          // console.log(displaySheet(sheet))
-          setDisplaySheet(Ds(sheet))
-        }} />
+        <Uploadsheet open={modalOpen} onClose={() => setModalOpen(false)} onSubmit={showSheet} />
         <Grow in={noteChanges.length > 0}>
           <div>
-            <FloatingActionCard onCancel={() => setNoteChanges([])} onSubmit={() => { 
+            <FloatingActionCard onCancel={() => setNoteChanges([])} onSubmit={() => {
 
-              setDisplaySheet(applyLatestChanges(displaySheet,noteChanges))
+              setDisplaySheet(applyLatestChanges(displaySheet, noteChanges))
               setTimeout(() => {
                 setNoteChanges([])
               }, 100)
 
-             }} />
+            }} />
           </div>
         </Grow>
+        {
+          ![undefined, null, {}].includes(selected) &&
+          ![undefined, null, ''].includes(selected.i) &&
+          noteChanges.length === 0 &&
+          <FloatingSaveButton onClick={onEditVersion} />
+        }
       </div>
     </context.Provider>
   );
